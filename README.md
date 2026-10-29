@@ -1,6 +1,6 @@
 # Corpse Party — New Chapter 1 / GBA Butano port
 
-Bản port C++ native dành cho Game Boy Advance, sử dụng Butano. Nguồn đầu vào: `Chapter_1.zip` người dùng cung cấp, gồm JAR bản vá tiếng Anh và scratchpad DoJa. Không chạy Java VM trên GBA.
+Bản port C++ native dành cho Game Boy Advance, sử dụng Butano. 
 
 ## Chơi
 
