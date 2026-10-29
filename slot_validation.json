@@ -1,0 +1,14 @@
+{
+  "core": "mGBA libretro",
+  "rom_bytes": 6265444,
+  "slots": 3,
+  "slot_stride": 9216,
+  "slot_checksums": "passed",
+  "independent_writes": "passed",
+  "load_all_three": "passed",
+  "overwrite_confirmation_and_cancel": "passed",
+  "reset_persistence": "passed",
+  "title_load": "passed",
+  "new_game_preserves_saves": "passed",
+  "empty_slot_rejected": "passed"
+}

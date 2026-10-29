@@ -1,0 +1,35 @@
+{
+  "core": "mGBA libretro",
+  "visible_pixels_sample_min": 1738,
+  "rom_bytes": 6263612,
+  "opening_skip_map": 17,
+  "b_does_not_advance_dialogue": "passed",
+  "b_cancels_opening_choice": "passed",
+  "save_checksum": "passed",
+  "font": "vfont.zip 238 glyphs 8x14",
+  "load_position": "passed",
+  "audio_peak": 1344,
+  "state": {
+    "map": 17,
+    "x": 8,
+    "y": 7,
+    "event": 416,
+    "pc": 1,
+    "ticks": 1632
+  },
+  "host_tests": {
+    "maps": 30,
+    "event_page_runs": 2458,
+    "command_instances": 7894,
+    "opening_skip": "passed",
+    "dialogue_restore": "passed"
+  },
+  "rom_sha256": "d02e504d48552ff0e32d795d11c52cbe13f0f7a7b5dd5bd046e3ba7be3a0dbef",
+  "source_archive_sha256": "3758ec1e83846e3d33a2c2ec487b207804ce9e0af73364f58a6fed63978dc421",
+  "gba_header_checksum_ok": true,
+  "limitations": [
+    "Not manually played through every ending",
+    "Not tested on physical GBA",
+    "General MIDI rendering differs from original phone synthesizer"
+  ]
+}
