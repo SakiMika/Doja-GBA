@@ -1,0 +1,14 @@
+# Local and GitHub Actions build products
+/build/
+/_butano/
+*.gba
+*.elf
+*.map
+*.o
+*.d
+*.sav
+bn_ofiles.txt
+
+# Local Python caches
+__pycache__/
+*.pyc

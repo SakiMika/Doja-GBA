@@ -1,0 +1,76 @@
+name: Build GBA ROM
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-engine:
+    name: Engine tests (native Linux)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Compile engine tests
+        run: |
+          g++ -std=c++17 -O2 -Iinclude \
+            tests/engine_test.cpp src/engine.cpp src/assets.cpp \
+            -o /tmp/doja-engine-test
+
+      - name: Run engine tests
+        run: /tmp/doja-engine-test
+
+  build-gba:
+    name: Build Corpse Party GBA ROM
+    needs: test-engine
+    runs-on: ubuntu-24.04
+    container:
+      # Pinned devkitPro toolchain image; includes devkitARM, GBA tools and Maxmod.
+      image: devkitpro/devkitarm:20260610
+
+    steps:
+      - name: Checkout game source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout Butano 21.9.0
+        uses: actions/checkout@v4
+        with:
+          repository: GValiente/butano
+          ref: 21.9.0
+          path: _butano
+          persist-credentials: false
+
+      - name: Check build tools
+        run: |
+          test -f "$GITHUB_WORKSPACE/_butano/butano/butano.mak"
+          test -f "$DEVKITARM/gba_rules"
+          command -v arm-none-eabi-g++
+          command -v mmutil
+          command -v grit
+          command -v python3
+
+      - name: Compile GBA ROM
+        run: |
+          make -j2 \
+            LIBBUTANO="$GITHUB_WORKSPACE/_butano/butano" \
+            PYTHON=python3
+
+      - name: Verify generated ROM
+        run: python3 tools/check_rom.py corpse_party_chapter1.gba
+
+      - name: Upload GBA ROM
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpse-party-chapter1-gba
+          path: corpse_party_chapter1.gba
+          if-no-files-found: error
+          retention-days: 30

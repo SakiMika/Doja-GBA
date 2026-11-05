@@ -33,7 +33,7 @@
 #---------------------------------------------------------------------------------------------------------------------
 TARGET := corpse_party_chapter1
 BUILD       	:=  build
-LIBBUTANO ?= D:/abc/gbc/butano/butano
+LIBBUTANO ?= ../butano/butano
 PYTHON      	:=  python
 SOURCES     	:=  src
 INCLUDES    	:=  include
