@@ -14,12 +14,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Compile engine tests
+        shell: bash
         run: |
+          set -euo pipefail
           g++ -std=c++17 -O2 -Iinclude \
             tests/engine_test.cpp src/engine.cpp src/assets.cpp \
             -o /tmp/doja-engine-test
@@ -31,44 +33,70 @@ jobs:
     name: Build Corpse Party GBA ROM
     needs: test-engine
     runs-on: ubuntu-24.04
-    container:
-      # Pinned devkitPro toolchain image; includes devkitARM, GBA tools and Maxmod.
-      image: devkitpro/devkitarm:20260610
-
+    # Keep JavaScript Actions on the GitHub-hosted runner. Only the GBA
+    # compilation runs inside devkitPro's image; this avoids Node runtime
+    # dependencies in the job's minimal container.
     steps:
       - name: Checkout game source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Checkout Butano 21.9.0
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: GValiente/butano
           ref: 21.9.0
           path: _butano
           persist-credentials: false
 
-      - name: Check build tools
+      - name: Check source layout
+        shell: bash
         run: |
-          test -f "$GITHUB_WORKSPACE/_butano/butano/butano.mak"
-          test -f "$DEVKITARM/gba_rules"
-          command -v arm-none-eabi-g++
-          command -v mmutil
-          command -v grit
-          command -v python3
+          set -euo pipefail
+          test -f Makefile
+          test -f _butano/butano/butano.mak
+          test -f tools/check_rom.py
+          test -d audio
+          echo 'Source and Butano 21.9.0 detected.'
 
-      - name: Compile GBA ROM
+      - name: Compile ROM with devkitARM (diagnostics enabled)
+        shell: bash
         run: |
-          make -j2 \
-            LIBBUTANO="$GITHUB_WORKSPACE/_butano/butano" \
-            PYTHON=python3
+          set -euo pipefail
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            --env HOME=/tmp \
+            devkitpro/devkitarm:20260610 \
+            /bin/bash -euo pipefail -c '
+              export DEVKITPRO=/opt/devkitpro
+              export DEVKITARM="$DEVKITPRO/devkitARM"
+              export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+              echo "Toolchain: $DEVKITARM"
+              for tool in make python3 arm-none-eabi-g++ mmutil grit gbafix; do
+                if ! command -v "$tool"; then
+                  echo "::error::Missing build command: $tool"
+                  exit 127
+                fi
+              done
+              test -f "$DEVKITARM/gba_rules" || { echo "::error::Missing gba_rules"; exit 1; }
+              test -f /workspace/_butano/butano/butano.mak || { echo "::error::Missing Butano makefile"; exit 1; }
+              echo "::group::devkitARM version"
+              arm-none-eabi-g++ --version | head -n 1
+              echo "::endgroup::"
+              echo "::group::Compile Butano game (verbose commands)"
+              make -j2 V=1 LIBBUTANO=/workspace/_butano/butano PYTHON=python3
+              echo "::endgroup::"
+            '
 
-      - name: Verify generated ROM
+      - name: Verify ROM header
+        shell: bash
         run: python3 tools/check_rom.py corpse_party_chapter1.gba
 
       - name: Upload GBA ROM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: corpse-party-chapter1-gba
           path: corpse_party_chapter1.gba
